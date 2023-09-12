@@ -1,0 +1,105 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+    id 'kotlinx-serialization'
+    id 'com.google.devtools.ksp' version '1.8.0-1.0.8'
+}
+
+android {
+    namespace 'com.example.ecrtool'
+    compileSdk 33
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
+        // Sets Java compatibility to Java 8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+}
+
+
+
+dependencies {
+    def room_version = "2.5.1"
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0"
+
+    implementation 'androidx.startup:startup-runtime:1.1.1'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.4'
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    // To use Kotlin Symbol Processing (KSP)
+    ksp "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
+    implementation 'io.insert-koin:koin-core:3.3.0'
+    implementation 'io.insert-koin:koin-android:3.3.1'
+
+//    implementation 'com.google.dagger:hilt-android:2.45'
+//    kapt 'com.google.dagger:hilt-compiler:2.45'
+
+    implementation 'commons-codec:commons-codec:1.15'
+
+    //serialization
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+
+    //api
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+    implementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.2"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:4.9.1"
+    implementation "com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.2"
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.68' // You can check for the latest version
+    implementation group: 'commons-codec', name: 'commons-codec', version: '1.15' // You can check for the latest version
+
+
+    androidTestImplementation "androidx.room:room-testing:2.5.1"
+
+    implementation 'org.valiktor:valiktor-core:0.12.0'
+
+    // TODO Are all these necessary?
+    implementation 'androidx.test.ext:junit-ktx:1.1.5'
+    testImplementation 'androidx.test.ext:junit-ktx:1.1.5'
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4"
+    implementation 'androidx.security:security-crypto-ktx:1.1.0-alpha06'
+
+}
+
+kapt {
+    correctErrorTypes true
+}
