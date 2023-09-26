@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import com.example.ecrtool.appData.AppData
+import com.example.ecrtool.listeners.AppMessenger
+import com.example.ecrtool.server.MyEcrServerSingleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import java.io.File
@@ -16,9 +19,11 @@ object Logger : KoinComponent {
     private const val TAG = "Logger"
     private const val FILE_NAME = "log.txt"
     private const val MAX_FILE_AGE_DAYS = 30
+    private val appListener = AppData.getMyEcrEftposInit()?.appListener
 
     fun logToFile(message: String) {
         // Log the message using android.util.Log
+        appListener?.sendToApp(message)
         Log.d(TAG, message)
 
         // Create a file object

@@ -85,7 +85,7 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
         }
     }
 
-    private fun onMessageReceived(message: String) {
+    fun onMessageReceived(message: String) {
         messageHandler.onMessage(message)
     }
 
@@ -103,6 +103,8 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
     fun sendMessage(message: String) {
         coroutineScope.launch(Dispatchers.IO) {
             val writer = socket?.getOutputStream()?.writer()
+            Log.d("TAG", "getOutputStream: $message")
+
             writer?.write(message)
             writer?.flush()
         }

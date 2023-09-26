@@ -10,8 +10,8 @@ data class MyEcrEftposInit(
     val port: Int = 8080,
     val coroutineScope: CoroutineScope? = CoroutineScope(Dispatchers.IO),
     val filePath: String = "",
-    val appListener: AppMessenger?, // appListener to receive requests that the module doesn't handle
-    val isCoreVersion: Boolean,
+    val appListener: AppMessenger? = null, // appListener to receive requests that the module doesn't handle
+    val isCoreVersion: Boolean = true,
     val TID: String,
     val vatNumber: String,
     val apiKey: String,

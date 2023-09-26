@@ -1,9 +1,13 @@
 package com.example.ecrtest
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.ecrtest.databinding.ActivityMainBinding
 import com.example.ecrtool.EcrToPosMain
 import com.example.ecrtool.appData.AppData
@@ -16,16 +20,19 @@ import com.example.ecrtool.models.trafficEcr.EchoResponse
 import com.example.ecrtool.models.trafficEcr.ResultResponse
 import com.example.ecrtool.models.trafficToPos.MyEcrEftposInit
 import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
+import com.example.ecrtool.server.MyEcrServerSingleton
 import com.example.ecrtool.utils.Constants
 import com.example.ecrtool.utils.Utils
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), AppMessenger {
 
     private lateinit var binding: ActivityMainBinding
     private val dt = DataTransformer.getInstance()
-    private lateinit var ecrServer : EcrToPosMain
+    private lateinit var ecrServer: EcrToPosMain
+    private val items = mutableListOf<Message>()
+    val adapter = MyRecyclerViewAdapter()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,39 +53,54 @@ class MainActivity : AppCompatActivity(), AppMessenger {
 
         AppData.initEncryptedSharedPrefs(this)
 
+        val recyclerView: RecyclerView = binding.itemsRv
+        val layoutManager = LinearLayoutManager(this)
+        recyclerView.layoutManager = layoutManager
 
+        recyclerView.adapter = adapter
+
+        val itemDecorator = ItemDecorator(resources.getDimensionPixelSize(R.dimen.item_spacing))
+        recyclerView.addItemDecoration(itemDecorator)
 
         EcrToPosMain.initialize(ftpos, this)
         ecrServer = EcrToPosMain.getInstance()
 
-        binding.buttonFirst.setOnClickListener {
-            val echoRequest = dt.parseEchoRequest(Utils.extractMessage("??�ECR0110X/CFB77000028:1234"))
+        binding.includedLayout.buttonFirst.setOnClickListener {
+            val echoRequest =
+                dt.parseEchoRequest(Utils.extractMessage("??�ECR0110X/CFB77000028:1234"))
             Log.d("TAG", "onCreate: EchoRequest :$echoRequest")
 
-            val  response = Utils.generateMessage(dt.createEchoResponseMessage(
-                EchoResponse(
-                    text = echoRequest?.text,
-                    terminalId = AppData.getTerminalId(),
-                    appVersion = AppData.getAppVersion()
+            val response = Utils.generateMessage(
+                dt.createEchoResponseMessage(
+                    EchoResponse(
+                        text = echoRequest?.text,
+                        terminalId = AppData.getTerminalId(),
+                        appVersion = AppData.getAppVersion()
+                    )
                 )
-            ))
+            )
             Log.d("TAG", "onCreate  EchoResponse : $response")
 
 
-            val amountRequest = dt.parseAmountRequest(Utils.extractMessage(".QECR0210A/S001008/F2500:978:2/D20220524102517/RABC00111222/H121/T1020/M0/Q59D19E7D"), Constants.TYPE_AMOUNT_SALE_REQUEST)
+            val amountRequest = dt.parseAmountRequest(
+                Utils.extractMessage(".QECR0210A/S001008/F2500:978:2/D20220524102517/RABC00111222/H121/T1020/M0/Q59D19E7D"),
+                Constants.TYPE_AMOUNT_SALE_REQUEST
+            )
 
             Log.d("TAG", "onCreate  amountRequest : $amountRequest")
 
 
-            val confirmResponse = Utils.generateMessage(dt.createConfirmationResponse(
-                ConfirmationResponse(
-                    receiptNumber = amountRequest.receiptNumber,
-                    sessionNumber = amountRequest.sessionNumber,
-                    amount = amountRequest.amount,
-                    ecrId = amountRequest.ecrId,
-                    decimals = amountRequest.decimals
+            val confirmResponse = Utils.generateMessage(
+                dt.createConfirmationResponse(
+                    ConfirmationResponse(
+                        receiptNumber = amountRequest.receiptNumber,
+                        sessionNumber = amountRequest.sessionNumber,
+                        amount = amountRequest.amount,
+                        ecrId = amountRequest.ecrId,
+                        decimals = amountRequest.decimals
+                    )
                 )
-            ))
+            )
 
             Log.d("TAG", "onCreate  confirmResponse : $confirmResponse")
 
@@ -95,25 +117,33 @@ class MainActivity : AppCompatActivity(), AppMessenger {
 
             Log.d("TAG", "onCreate  resultResponse : $resultResponse")
 
-            val ackResultRequest = dt.parseAckResultRequest(Utils.extractMessage(".QECR0110R/S001008/RABC00111222/F2500/T1020"))
+            val ackResultRequest =
+                dt.parseAckResultRequest(Utils.extractMessage(".QECR0110R/S001008/RABC00111222/F2500/T1020"))
             Log.d("TAG", "onCreate: ackResultRequest :$ackResultRequest")
 
-            val regReceiptRequest = dt.parseRegReceiptRequest(Utils.extractMessage(".QECR0110W/S001573/F5000:978:2/D20220711105009/RABC00111222/H121/T1228/M0/Q30ADD8A3"))
+            val regReceiptRequest =
+                dt.parseRegReceiptRequest(Utils.extractMessage(".QECR0110W/S001573/F5000:978:2/D20220711105009/RABC00111222/H121/T1228/M0/Q30ADD8A3"))
             Log.d("TAG", "onCreate: regReceiptRequest :$regReceiptRequest")
 
-            val resendRequest = dt.parseResendRequest(Utils.extractMessage(".8ECR0110O/S001058/F150:978:2/RABC00111222/T1051/QF7167A9F"))
+            val resendRequest =
+                dt.parseResendRequest(Utils.extractMessage(".8ECR0110O/S001058/F150:978:2/RABC00111222/T1051/QF7167A9F"))
             Log.d("TAG", "onCreate: resendRequest :$resendRequest")
 
-            val resendAllRequest = dt.parseResendAllRequest(Utils.extractMessage("./ECR0110L/RABC00111222/D20220711110645/Q6C483FCE"))
+            val resendAllRequest =
+                dt.parseResendAllRequest(Utils.extractMessage("./ECR0110L/RABC00111222/D20220711110645/Q6C483FCE"))
             Log.d("TAG", "onCreate: resendAllRequest :$resendAllRequest")
 
-            val controlRequest = dt.parseControlRequest(Utils.extractMessage(".#ECR0210U/RABC00111222/CUNBIND_POS:1"))
+            val controlRequest =
+                dt.parseControlRequest(Utils.extractMessage(".#ECR0210U/RABC00111222/CUNBIND_POS:1"))
             Log.d("TAG", "onCreate: controlRequest :$controlRequest")
 
-            val controlRequestMK = dt.parseControlRequest(Utils.extractMessage(".DECR0210U/RABC00111222/CMAC_K:1ED9F7AE0B2509281BBC2DE38EF2A12B:CC5FFF"))
+            val controlRequestMK =
+                dt.parseControlRequest(Utils.extractMessage(".DECR0210U/RABC00111222/CMAC_K:1ED9F7AE0B2509281BBC2DE38EF2A12B:CC5FFF"))
             Log.d("TAG", "onCreate: controlRequestMK :$controlRequestMK")
 
-            //MyEcrServerSingleton.getInstance().onMessageReceived(".QECR0210A/S001008/F2500:978:2/D20220524102517/RABC00111222/H121/T1020/M0/Q59D19E7D")
+
+            MyEcrServerSingleton.getInstance()
+                .onMessageReceived(".QECR0210A/S001008/F2500:978:2/D20220524102517/RABC00111222/H121/T1020/M0/Q59D19E7D")
 
             //MyEcrServerSingleton.getInstance().onMessageReceived(".QECR0110X/INIT:CFB77000028")
 
@@ -121,44 +151,74 @@ class MainActivity : AppCompatActivity(), AppMessenger {
 //            MyEcrServerSingleton.getInstance().onMessageReceived(".DECR0210U/RABC00111222/CMAC_K:1ED9F7AE0B2509281BBC2DE38EF2A12B:CC5FFF")
         }
 
-        binding.button2.setOnClickListener{ lifecycleScope.launch {ecrServer.startServer()}}
-        binding.button3.setOnClickListener { lifecycleScope.launch { ecrServer.stopServer() } }
-        binding.button4.setOnClickListener { lifecycleScope.launch { this.launch {
-            ProcessFlow.getInstance().callAade()
-        } } }
+        binding.includedLayout.button2.setOnClickListener { lifecycleScope.launch { ecrServer.startServer() } }
+        binding.includedLayout.button3.setOnClickListener { lifecycleScope.launch { ecrServer.stopServer() } }
+        binding.includedLayout.button4.setOnClickListener {
+            lifecycleScope.launch {
+                this.launch {
+                    ProcessFlow.getInstance().callAade()
+                }
+            }
+        }
     }
 
     override fun sendToApp(data: Any) {
-        if(data is AmountRequest) {
-            ecrServer.sendMessageToEcr(
-                PaymentToPosResult(
-                    success = true,
-                    code = "00",
-                    cardType = "Mastercard",
-                    txnType = "00",
-                    cardPanMasked = Utils.createMaskedPan("000012300412341234"),
-                    amountFinal = data.amount,
-                    amountTip = 0.0,
-                    amountLoyalty = 0.0,
-                    amountCashBack = 0.0,
-                    bankId = "1",
-                    batchNum = "2",
-                    rrn = "133030119089",
-                    stan = Utils.generateRandomStan(),
-                    authCode = Utils.generateRandomAuthCode(),
-                    transDateTime = Utils.generateTransactionDateTime(),
-                    receiptNumber = data.receiptNumber,
-                    sessionNumber = data.sessionNumber,
-                    amount = data.amount,
-                    ecrId = data.ecrId,
-                    rspCode = "00",
-                    transactionEcrStatus = "0",
-                    prnData = "adsf",
-                    terminalId = "80011693",
-                    decimalPoints = data.decimals,
-                    customData = data.customData
+        when(data) {
+            is String -> {
+                adapter.addItem(Message(content = data, messageType = MessageType.INCOMING))
+            }
+            is AmountRequest -> {
+                ecrServer.sendMessageToEcr(
+                    PaymentToPosResult(
+                        success = true,
+                        code = "00",
+                        cardType = "Mastercard",
+                        txnType = "00",
+                        cardPanMasked = Utils.createMaskedPan("000012300412341234"),
+                        amountFinal = data.amount,
+                        amountTip = 0.0,
+                        amountLoyalty = 0.0,
+                        amountCashBack = 0.0,
+                        bankId = "1",
+                        batchNum = "2",
+                        rrn = "133030119089",
+                        stan = Utils.generateRandomStan(),
+                        authCode = Utils.generateRandomAuthCode(),
+                        transDateTime = Utils.generateTransactionDateTime(),
+                        receiptNumber = data.receiptNumber,
+                        sessionNumber = data.sessionNumber,
+                        amount = data.amount,
+                        ecrId = data.ecrId,
+                        rspCode = "00",
+                        transactionEcrStatus = "0",
+                        prnData = "adsf",
+                        terminalId = "80011693",
+                        decimalPoints = data.decimals,
+                        customData = data.customData
+                    )
                 )
-            )
+            }
         }
+
+    }
+
+    private fun openFragment() {
+        val fragment = InputFragment.newInstance() // Instantiate your custom fragment
+        val fragmentManager: FragmentManager = supportFragmentManager
+        val transaction: FragmentTransaction = fragmentManager.beginTransaction()
+
+        // Set the animation for entering the fragment (right to left)
+        transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left)
+
+        transaction.replace(
+            R.id.fragmentContainer,
+            fragment
+        ) // R.id.fragmentContainer should be the container in your main layout where you want to replace fragments
+        transaction.addToBackStack(null)
+        transaction.commit()
+    }
+
+    fun saveInput(myEcrEftposInit: MyEcrEftposInit) {
+        EcrToPosMain.initialize(myEcrEftposInit, this)
     }
 }

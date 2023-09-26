@@ -26,6 +26,7 @@ import com.example.ecrtool.utils.Logger
 import com.example.ecrtool.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.UnsupportedEncodingException
 
@@ -152,10 +153,8 @@ class MessageHandler private constructor() : MessageListener {
 
     override fun sendMessage(message: String) {
         val finalMessage = Utils.generateMessage(message)
-        Log.d("TAG", "sendMessage: $finalMessage")
-        val bytes = message.encodeToByteArray()
-        Log.d("MessageHandler", "------- FROM POS -------" )
-        Log.d("MessageHandler", formatHexDump(bytes, 0, bytes.size))
+        val bytes = finalMessage.encodeToByteArray()
+        val wert = formatHexDump(bytes, 0, bytes.size)
         server.sendMessage(finalMessage)
     }
 }

@@ -113,7 +113,9 @@ object Utils {
             append(message)
 
             val buffer = ByteBuffer.allocate(2)
-            buffer.putShort(message.length.toShort())
+            buffer.put(message.length.toByte())
+
+
             insert(0, buffer.array().decodeToString())
         }
     }
