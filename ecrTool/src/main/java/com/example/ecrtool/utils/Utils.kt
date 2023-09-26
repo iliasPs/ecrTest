@@ -104,20 +104,19 @@ object Utils {
     }
 
 
-    fun generateMessage(message: String): String {
-
-        return buildString {
+    fun generateMessage(message: String): ByteArray {
+        val x = buildString {
             append(Constants.DIRECTION)
             append(AppData.getProtocolVariant())
             append(AppData.getProtocolVersion())
             append(message)
-
-            val buffer = ByteBuffer.allocate(2)
-            buffer.put(message.length.toByte())
-
-
-            insert(0, buffer.array().decodeToString())
         }
+        // Create byte array containing 2-byte message length (binary) followed
+        //  by the actual message
+        val buffer = ByteBuffer.allocate(2 + x.length)
+        buffer.putShort(x.length.toShort())
+        buffer.put(x.toByteArray(Charsets.UTF_8))
+        return buffer.array()
     }
 
     fun String?.nonNull(defaultValue: String = ""): String {

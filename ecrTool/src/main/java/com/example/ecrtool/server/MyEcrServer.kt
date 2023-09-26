@@ -100,13 +100,11 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
         serverSocket.close()
     }
 
-    fun sendMessage(message: String) {
+    fun sendMessage(message: ByteArray) {
         coroutineScope.launch(Dispatchers.IO) {
-            val writer = socket?.getOutputStream()?.writer()
-            Log.d("TAG", "getOutputStream: $message")
-
-            writer?.write(message)
-            writer?.flush()
+            val outputStream = socket?.getOutputStream()
+            outputStream?.write(message, 0, message.size)
+            outputStream?.flush()
         }
     }
 

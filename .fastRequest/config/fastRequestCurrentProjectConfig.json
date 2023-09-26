@@ -1,25 +1,11 @@
 {
-	"dataList":[
-		{
-			"hostGroup":[
-				{
-					"env":"ecr",
-					"url":""
-				}
-			],
-			"name":"ecrTest"
-		}
-	],
-	"envList":[
-		"ecr"
-	],
+	"dataList":[],
+	"envList":[],
 	"headerList":[],
 	"maxDescriptionLength":-1,
 	"postScript":"",
 	"preScript":"",
-	"projectList":[
-		"ecrTest"
-	],
+	"projectList":[],
 	"syncModel":{
 		"branch":"master",
 		"domain":"https://github.com",
