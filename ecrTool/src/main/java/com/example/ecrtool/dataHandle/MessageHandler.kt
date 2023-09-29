@@ -103,6 +103,8 @@ class MessageHandler private constructor() : MessageListener {
     }
 
     override fun onMessage(message: String) {
+        Logger.logToFile("FROM ECR: ${formatHexDump(message.encodeToByteArray(), 0, message.encodeToByteArray().size)}")
+
         Logger.logToFile("FROM ECR: $message")
         val bytes = message.encodeToByteArray()
         Log.d("MessageHandler", "------- FROM ECR -------" )
@@ -116,12 +118,13 @@ class MessageHandler private constructor() : MessageListener {
         } else dt.createErrorResponseMessage(Constants.MAC_ERROR)
     }
 
-    private fun formatHexDump(array: ByteArray, offset: Int, length: Int): String {
+    fun formatHexDump(array: ByteArray, offset: Int, length: Int): String {
         val width = 16
         val builder = StringBuilder()
         var rowOffset = offset
         while (rowOffset < offset + length) {
-            builder.append(String.format("%06d:  ", rowOffset))
+            // Comment out the line that appends the offset
+            // builder.append(String.format("%06d:  ", rowOffset))
             for (index in 0 until width) {
                 if (rowOffset + index < array.size) {
                     builder.append(String.format("%02x ", array[rowOffset + index]))
@@ -142,7 +145,7 @@ class MessageHandler private constructor() : MessageListener {
                         ).replace("[^\\x20-\\x7E]".toRegex(), ".")
                     )
                 } catch (ignored: UnsupportedEncodingException) {
-                    //If UTF-8 isn't available as an encoding then what can we do?!
+                    // If UTF-8 isn't available as an encoding then what can we do?!
                 }
             }
             builder.append(String.format("%n"))
@@ -151,12 +154,14 @@ class MessageHandler private constructor() : MessageListener {
         return builder.toString()
     }
 
+
     override fun sendMessage(message: String) {
         val finalMessage = Utils.generateMessage(message)
         Log.d("TAG", "sendMessage: ${finalMessage.decodeToString()}")
         //val bytes = finalMessage.encodeToByteArray()
         Log.d("MessageHandler", "------- FROM POS -------" )
        // Log.d("MessageHandler", formatHexDump(bytes, 0, bytes.size))
+
         server.sendMessage(finalMessage)
     }
 }

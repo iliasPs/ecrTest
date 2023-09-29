@@ -1,5 +1,8 @@
 package com.example.ecrtest
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.View
@@ -17,10 +20,12 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     inner class IncomingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val jsonTextView: TextView = itemView.findViewById(R.id.jsonTextView)
+        val directionView: TextView =itemView.findViewById(R.id.direction)
     }
 
     inner class OutgoingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val jsonTextView: TextView = itemView.findViewById(R.id.jsonTextView)
+        val directionView: TextView = itemView.findViewById(R.id.direction)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -45,11 +50,13 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         when (holder) {
             is MyRecyclerViewAdapter.IncomingViewHolder -> {
-                holder.jsonTextView.text = prettyPrintedJson
+                holder.jsonTextView.text = item.content
+                holder.directionView.text = item.messageType.toString()
                 // Handle incoming item specific logic
             }
             is MyRecyclerViewAdapter.OutgoingViewHolder -> {
-                holder.jsonTextView.text = prettyPrintedJson
+                holder.jsonTextView.text = item.content
+                holder.directionView.text = item.messageType.toString()
                 // Handle outgoing item specific logic
             }
         }
@@ -86,20 +93,40 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 }
 
 
-class ItemDecorator(private val spaceHeight: Int) : ItemDecoration() {
+class ItemDecorator(private val dividerHeight: Int) : RecyclerView.ItemDecoration() {
+
+    private val dividerPaint = Paint()
+
+    init {
+        dividerPaint.color = Color.BLACK // Set the color of the divider (black in this case)
+        dividerPaint.style = Paint.Style.STROKE
+        dividerPaint.strokeWidth = dividerHeight.toFloat()
+    }
+
+    override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        val left = parent.paddingLeft
+        val right = parent.width - parent.paddingRight
+
+        for (i in 0 until parent.childCount - 1) {
+            val child = parent.getChildAt(i)
+            val params = child.layoutParams as RecyclerView.LayoutParams
+            val top = child.bottom + params.bottomMargin
+            val bottom = top + dividerHeight
+
+            c.drawLine(left.toFloat(), top.toFloat(), right.toFloat(), top.toFloat(), dividerPaint)
+        }
+    }
+
     override fun getItemOffsets(
         outRect: Rect,
         view: View,
         parent: RecyclerView,
         state: RecyclerView.State
     ) {
-        super.getItemOffsets(outRect, view, parent, state)
-        val position = parent.getChildAdapterPosition(view)
-        if (position != 0) {
-            outRect.top = spaceHeight
-        }
+        outRect.bottom = dividerHeight // Add bottom margin to each item to create space for the divider
     }
 }
+
 
 data class Message(
     val content: String,

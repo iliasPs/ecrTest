@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldDefaults
@@ -15,6 +19,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
@@ -29,6 +35,7 @@ class InputFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private var isCore: Boolean = true
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +47,11 @@ class InputFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_input, container, false)
+        return ComposeView(requireContext()).apply {
+            setContent {
+                MyFragmentContent()
+            }
+        }
     }
 
     companion object {
@@ -61,12 +72,13 @@ class InputFragment : Fragment() {
     @Preview
     @Composable
     fun MyFragmentContent() {
-        var port by rememberSaveable { mutableStateOf("port") }
-        var TID by rememberSaveable { mutableStateOf("TID") }
-        var vatNumber by rememberSaveable { mutableStateOf("vatNumber") }
-        var apikey by rememberSaveable { mutableStateOf("apikey") }
-        var MAN by rememberSaveable { mutableStateOf("MAN") }
-        var appVersion by rememberSaveable { mutableStateOf("appVersion") }
+        var port by rememberSaveable { mutableStateOf("5050") }
+        var TID by rememberSaveable { mutableStateOf("") }
+        var vatNumber by rememberSaveable { mutableStateOf("") }
+        var apikey by rememberSaveable { mutableStateOf("pubAGQR@XNzSk%b&+X!A?h?HJUVVhPHlyv/acPq0uKHQ#dEc3B85en%AXHiX2i8&") }
+        var MAN by rememberSaveable { mutableStateOf("") }
+        var appVersion by rememberSaveable { mutableStateOf("") }
+        var isCoreVersion by rememberSaveable { mutableStateOf("") }
 
 
         val textFieldColors = TextFieldDefaults.outlinedTextFieldColors(
@@ -164,18 +176,25 @@ class InputFragment : Fragment() {
 
             Spacer(modifier = Modifier.height(16.dp)) // Add some spacing between the TextField and the Button
 
+            // Spinner for isCoreVersion
+            VersionCheckBox()
+
+            Spacer(modifier = Modifier.height(16.dp)) // Add some spacing between the TextField and the Button
+
             Button(
                 onClick = {
-                    (requireActivity() as MainActivity).saveInput(MyEcrEftposInit(
-                        port = port.toInt(),
-                        TID = TID,
-                        vatNumber = vatNumber,
-                        apiKey = apikey,
-                        MAN = MAN,
-                        appListener = requireActivity() as MainActivity,
-                        appVersion = appVersion,
-                        validateMk = false
-                    ))
+                    (requireActivity() as MainActivity).saveAndStartServer(
+                        MyEcrEftposInit(
+                            port = port.toInt(),
+                            TID = TID,
+                            vatNumber = vatNumber,
+                            apiKey = apikey,
+                            MAN = MAN,
+                            appListener = requireActivity() as MainActivity,
+                            appVersion = appVersion,
+                            validateMk = false
+                        )
+                    )
                     dismissFragment()
                 },
                 modifier = Modifier
@@ -185,6 +204,27 @@ class InputFragment : Fragment() {
             }
         }
     }
+
+    @Composable
+    fun VersionCheckBox() {
+        var isChecked by remember { mutableStateOf(false) }
+
+        Column {
+            Text("Core Version?") // Add a label
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Checkbox(
+                checked = true,
+                onCheckedChange = { isCore = isChecked == true},
+                modifier = Modifier.padding(16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+        }
+    }
+
 
     private fun dismissFragment() {
         val fragmentManager = requireActivity().supportFragmentManager
