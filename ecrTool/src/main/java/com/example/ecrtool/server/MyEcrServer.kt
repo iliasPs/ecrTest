@@ -18,10 +18,12 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
     private var listener: ProcessFlowsListener = ProcessFlow.getInstance()
     private var paymentResultListener: PaymentResultListener = ProcessFlow.getInstance()
     private var messageHandler = MessageHandler.getInstance()
-    private val serverSocket = ServerSocket(myEcrEftposInit.port)
+    private var init = myEcrEftposInit
+    private var serverSocket = ServerSocket(myEcrEftposInit.port)
     private val coroutineScope = myEcrEftposInit.coroutineScope ?: CoroutineScope(Dispatchers.IO)
     private var socket: Socket? = null
     private var isRunning = false
+    private var job: Job? = null
 
     init {
         messageHandler.setListener(listener)
@@ -33,18 +35,31 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
             return
         }
         isRunning = true
-        coroutineScope.launch {
-            try {
-                while (isRunning) {
-                    socket = withContext(Dispatchers.IO) {
-                        serverSocket.accept()
+        if (job != null && job!!.isActive) {
+            Log.d("TAG", "start: job.isActive")
+
+            return
+        } else {
+            job = coroutineScope.launch {
+                try {
+                    Log.d("TAG", "start: NEW job.")
+
+                    while (isRunning) {
+                        socket = withContext(Dispatchers.IO) {
+                            if (serverSocket.isClosed) {
+                                serverSocket = ServerSocket(init.port)
+                            }
+                            serverSocket.accept()
+                        }
+                        handleConnection(socket)
                     }
-                    handleConnection(socket)
+                } catch (e: java.lang.Exception) {
+                    Log.d("TAG", "start: cactching ${e.message}")
                 }
-            }catch (e: java.lang.Exception){
-                Log.d("TAG", "start: cactching")
             }
+            job?.start()
         }
+
     }
 
     private fun handleConnection(socket: Socket?) {
@@ -95,8 +110,8 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
     }
 
     fun stop() {
-        isRunning =false
-        coroutineScope.coroutineContext.cancelChildren()
+        isRunning = false
+        job?.cancelChildren()
         serverSocket.close()
     }
 
