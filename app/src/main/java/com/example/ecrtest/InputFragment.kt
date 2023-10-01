@@ -4,43 +4,25 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import com.example.ecrtool.models.trafficToPos.MyEcrEftposInit
 
-/**
- * A simple [Fragment] subclass.
- * Use the [InputFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class InputFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-    private var isCore: Boolean = true
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -72,24 +54,25 @@ class InputFragment : Fragment() {
     @Preview
     @Composable
     fun MyFragmentContent() {
-        var port by rememberSaveable { mutableStateOf("5050") }
-        var TID by rememberSaveable { mutableStateOf("") }
-        var vatNumber by rememberSaveable { mutableStateOf("") }
+        var port by rememberSaveable { mutableStateOf("5566") }
+        var TID by rememberSaveable { mutableStateOf("80011693") }
+        var vatNumber by rememberSaveable { mutableStateOf("979703476") }
         var apikey by rememberSaveable { mutableStateOf("pubAGQR@XNzSk%b&+X!A?h?HJUVVhPHlyv/acPq0uKHQ#dEc3B85en%AXHiX2i8&") }
-        var MAN by rememberSaveable { mutableStateOf("") }
-        var appVersion by rememberSaveable { mutableStateOf("") }
-        var isCoreVersion by rememberSaveable { mutableStateOf("") }
+        var MAN by rememberSaveable { mutableStateOf("fintechiq_dok") }
+        var appVersion by rememberSaveable { mutableStateOf("1.0.0") }
 
 
-        val textFieldColors = TextFieldDefaults.outlinedTextFieldColors(
+        val textFieldColors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color.Blue,     // Change text color to blue when focused
-            unfocusedBorderColor = Color.Gray    // Change text color to gray when unfocused
+            unfocusedBorderColor = Color.Gray,    // Change text color to gray when unfocused
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp) // Adjust padding as needed
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()) // Enable vertical scrolling
+
         ) {
             OutlinedTextField(
                 value = port,
@@ -176,8 +159,7 @@ class InputFragment : Fragment() {
 
             Spacer(modifier = Modifier.height(16.dp)) // Add some spacing between the TextField and the Button
 
-            // Spinner for isCoreVersion
-            VersionCheckBox()
+//            isCore = VersionCheckBox()
 
             Spacer(modifier = Modifier.height(16.dp)) // Add some spacing between the TextField and the Button
 
@@ -205,28 +187,26 @@ class InputFragment : Fragment() {
         }
     }
 
-    @Composable
-    fun VersionCheckBox() {
-        var isChecked by remember { mutableStateOf(false) }
-
-        Column {
-            Text("Core Version?") // Add a label
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Checkbox(
-                checked = true,
-                onCheckedChange = { isCore = isChecked == true},
-                modifier = Modifier.padding(16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-        }
-    }
+//    @Composable
+//    fun VersionCheckBox(): Boolean {
+//        var isChecked by remember { mutableStateOf(false) }
+//
+//        Row {
+//            Text("Core Version?")
+//
+//            Checkbox(
+//                checked = isChecked,
+//                onCheckedChange = {
+//                    isChecked = it
+//                },
+//                modifier = Modifier.padding(16.dp)
+//            )
+//        }
+//        return isChecked
+//    }
 
 
-    private fun dismissFragment() {
+    fun dismissFragment() {
         val fragmentManager = requireActivity().supportFragmentManager
         val transaction = fragmentManager.beginTransaction()
         transaction.setCustomAnimations(R.anim.exit_to_left, 0)
@@ -235,3 +215,4 @@ class InputFragment : Fragment() {
     }
 
 }
+

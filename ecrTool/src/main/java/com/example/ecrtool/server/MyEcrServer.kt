@@ -33,10 +33,10 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
 
     fun start() {
 
-        if(serverSocket == null) {
+        if (serverSocket == null) {
             serverSocket = ServerSocket(init.port)
             serverSocket!!.reuseAddress = true
-            serverSocket!!.bind(InetSocketAddress(init.port))
+            // No need to call bind() again, as it's already bound by the constructor.
         }
 
         if (isRunning) {

@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +22,7 @@ import com.example.ecrtest.databinding.ActivityMainBinding
 import com.example.ecrtool.EcrToPosMain
 import com.example.ecrtool.appData.AppData
 import com.example.ecrtool.dataHandle.DataTransformer
+import com.example.ecrtool.dataHandle.ProcessFlow
 import com.example.ecrtool.listeners.AppMessenger
 import com.example.ecrtool.models.trafficEcr.AmountRequest
 import com.example.ecrtool.models.trafficEcr.ConfirmationResponse
@@ -32,7 +32,6 @@ import com.example.ecrtool.models.trafficToPos.MyEcrEftposInit
 import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
 import com.example.ecrtool.server.MyEcrServerSingleton
 import com.example.ecrtool.utils.Constants
-import com.example.ecrtool.utils.Logger
 import com.example.ecrtool.utils.Utils
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.conn.util.InetAddressUtils
 import kotlinx.coroutines.launch
@@ -184,14 +183,18 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         }
 
         binding.includedLayout.button2.setOnClickListener { lifecycleScope.launch { ecrServer.startServer() } }
-        binding.includedLayout.button3.setOnClickListener { lifecycleScope.launch { ecrServer.stopServer() } }
+        binding.includedLayout.button3.setOnClickListener {
+            lifecycleScope.launch {
+                lifecycleScope.launch {
+                    this.launch {
+                        ProcessFlow.getInstance().callAade()
+                    }
+                }
+            }
+        }
         binding.includedLayout.button4.setOnClickListener {
             openFragment()
-//            lifecycleScope.launch {
-//                this.launch {
-//                    ProcessFlow.getInstance().callAade()
-//                }
-//            }
+
         }
     }
 
@@ -249,6 +252,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
     }
 
     private fun openFragment() {
+        binding.itemsRv.visibility = View.GONE
         val fragment = InputFragment.newInstance() // Instantiate your custom fragment
         val fragmentManager: FragmentManager = supportFragmentManager
         val transaction: FragmentTransaction = fragmentManager.beginTransaction()
@@ -259,16 +263,20 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         binding.includedLayoutContainer.visibility = View.GONE
         transaction.replace(
             R.id.fragmentContainer,
-            fragment
-        ) // R.id.fragmentContainer should be the container in your main layout where you want to replace fragments
+            fragment,
+            "input"
+        )
         transaction.addToBackStack(null)
         transaction.commit()
     }
 
     fun saveAndStartServer(myEcrEftposInit: MyEcrEftposInit) {
+        binding.itemsRv.visibility = View.VISIBLE
         this.myEcrEftposInit = myEcrEftposInit
+        EcrToPosMain.initialize(myEcrEftposInit.copy(isCoreVersion = true), this)
+        ecrServer = EcrToPosMain.getInstance()
         binding.includedLayoutContainer.visibility = View.VISIBLE
-        binding.includedLayout.portTv.text = myEcrEftposInit.port.toString()
+        binding.includedLayout.portTv.text = "Port: ${myEcrEftposInit.port.toString()}"
         EcrToPosMain.initialize(myEcrEftposInit, this)
     }
 
@@ -313,12 +321,9 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         return super.onOptionsItemSelected(item)
     }
 
-    fun showInfoDialog() {
+    private fun showInfoDialog() {
         val inflater = LayoutInflater.from(this)
         val dialogView = inflater.inflate(R.layout.custom_dialog_layout, null)
-        val dialogTitle = dialogView.findViewById<TextView>(R.id.dialog_title)
-        val dialogContainer = dialogView.findViewById<LinearLayout>(R.id.dialog_container)
-
 
         val portView = dialogView.findViewById<TextView>(R.id.port_value)
         val appListenerView = dialogView.findViewById<TextView>(R.id.app_listener_view)
@@ -348,11 +353,11 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         dialog.show()
     }
 
-    fun shareItems(context: Context, items: MutableList<Message>) {
+    private fun shareItems(context: Context, items: MutableList<Message>) {
         // 1. Convert your list of items to a formatted string
         val formattedData = items.joinToString("\n") { item ->
             // Customize how each item is formatted
-            "${item.content}, ${item.messageType}"
+            "${item.messageType}, ${item.content}"
         }
 
         // 2. Create a temporary file to write the data
@@ -378,5 +383,17 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         context.startActivity(chooserIntent)
     }
 
+    override fun onBackPressed() {
+
+        val fragment = supportFragmentManager.findFragmentByTag("input")
+
+        if (fragment != null && fragment.isVisible) {
+            binding.includedLayoutContainer.visibility = View.VISIBLE
+            binding.itemsRv.visibility = View.VISIBLE
+            (fragment as InputFragment).dismissFragment()
+        } else {
+            // The fragment is not visible
+        }
+    }
 
 }
