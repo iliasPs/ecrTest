@@ -3,4 +3,13 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="new_data">Input data</string>
+    <string name="app_data_title">App data</string>
+    <string name="port_header">Port: </string>
+    <string name="coroutines_scope_header">Coroutines Scope: </string>
+    <string name="appListener_header">AppListener: </string>
+    <string name="tid_header">TID: </string>
+    <string name="vat_no_header">Vat Number: </string>
+    <string name="api_key_header">Api Key: </string>
+    <string name="man_header">MAN: </string>
+    <string name="app_version_header">App Version: </string>
 </resources>

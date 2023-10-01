@@ -1,10 +1,19 @@
 package com.example.ecrtest
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
@@ -23,9 +32,11 @@ import com.example.ecrtool.models.trafficToPos.MyEcrEftposInit
 import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
 import com.example.ecrtool.server.MyEcrServerSingleton
 import com.example.ecrtool.utils.Constants
+import com.example.ecrtool.utils.Logger
 import com.example.ecrtool.utils.Utils
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.conn.util.InetAddressUtils
 import kotlinx.coroutines.launch
+import java.io.File
 import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity(), AppMessenger {
@@ -35,6 +46,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
     private lateinit var ecrServer: EcrToPosMain
     private val items = mutableListOf<Message>()
     val adapter = MyRecyclerViewAdapter()
+    private var myEcrEftposInit: MyEcrEftposInit? = null
 
 
     @SuppressLint("SetTextI18n")
@@ -73,7 +85,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
 
         binding.includedLayout.buttonFirst.setOnClickListener {
 
-            val ftpos = MyEcrEftposInit(
+            myEcrEftposInit = MyEcrEftposInit(
                 port = 5566,
                 appListener = this,
                 isCoreVersion = true,
@@ -84,7 +96,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
                 appVersion = "1.0.0",
                 validateMk = true
             )
-            EcrToPosMain.initialize(ftpos, this)
+            EcrToPosMain.initialize(myEcrEftposInit!!, this)
             ecrServer = EcrToPosMain.getInstance()
             val echoRequest =
                 dt.parseEchoRequest(Utils.extractMessage("??�ECR0110X/CFB77000028"))
@@ -254,6 +266,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
     }
 
     fun saveAndStartServer(myEcrEftposInit: MyEcrEftposInit) {
+        this.myEcrEftposInit = myEcrEftposInit
         binding.includedLayoutContainer.visibility = View.VISIBLE
         binding.includedLayout.portTv.text = myEcrEftposInit.port.toString()
         EcrToPosMain.initialize(myEcrEftposInit, this)
@@ -277,4 +290,93 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         }
         return null
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu);
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (myEcrEftposInit != null) {
+            if (item.itemId == R.id.action_info) {
+                showInfoDialog()
+                return true
+            }
+        }
+
+        if (!adapter.getItems().isNullOrEmpty()) {
+            if (item.itemId == R.id.action_share)
+                shareItems(this, adapter.getItems())
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    fun showInfoDialog() {
+        val inflater = LayoutInflater.from(this)
+        val dialogView = inflater.inflate(R.layout.custom_dialog_layout, null)
+        val dialogTitle = dialogView.findViewById<TextView>(R.id.dialog_title)
+        val dialogContainer = dialogView.findViewById<LinearLayout>(R.id.dialog_container)
+
+
+        val portView = dialogView.findViewById<TextView>(R.id.port_value)
+        val appListenerView = dialogView.findViewById<TextView>(R.id.app_listener_view)
+        val tidView = dialogView.findViewById<TextView>(R.id.tid)
+        val vatNoView = dialogView.findViewById<TextView>(R.id.vatNo)
+        val apiKeyView = dialogView.findViewById<TextView>(R.id.apiKey)
+        val manView = dialogView.findViewById<TextView>(R.id.man)
+        val appVersionView = dialogView.findViewById<TextView>(R.id.appVersion)
+
+        portView.text = myEcrEftposInit?.port.toString()
+        appListenerView.text = myEcrEftposInit?.appListener!!::class.java.simpleName
+        tidView.text = myEcrEftposInit?.TID
+        vatNoView.text = myEcrEftposInit?.vatNumber
+        apiKeyView.text = myEcrEftposInit?.apiKey
+        manView.text = myEcrEftposInit?.MAN
+        appVersionView.text = myEcrEftposInit?.appVersion
+
+        val builder = AlertDialog.Builder(this)
+        builder.setView(dialogView)
+
+        // Add an "OK" button to dismiss the dialog
+        builder.setPositiveButton("OK") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+    fun shareItems(context: Context, items: MutableList<Message>) {
+        // 1. Convert your list of items to a formatted string
+        val formattedData = items.joinToString("\n") { item ->
+            // Customize how each item is formatted
+            "${item.content}, ${item.messageType}"
+        }
+
+        // 2. Create a temporary file to write the data
+        val file = File(context.cacheDir, "shared_items.txt")
+        file.writeText(formattedData)
+
+        // 3. Create a content URI for the file using FileProvider
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.MainActivity",
+            file
+        )
+
+        // 4. Create an Intent to share the file
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "text/plain"
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        val chooserIntent = Intent.createChooser(shareIntent, "Share Items")
+        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        context.startActivity(chooserIntent)
+    }
+
+
 }

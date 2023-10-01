@@ -90,6 +90,10 @@ class MyRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private const val VIEW_TYPE_INCOMING = 0
         private const val VIEW_TYPE_OUTGOING = 1
     }
+
+    fun getItems(): MutableList<Message> {
+        return items
+    }
 }
 
 

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/dialog_info.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Add your custom content here -->
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_data_title"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- Property labels and values -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Port -->
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/port_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/port_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="8080" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/appListener_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/app_listener_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="applistner.IO" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tid_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Dispatchers.IO" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/vat_no_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/vatNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Dispatchers.IO" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/api_key_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/apiKey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Dispatchers.IO" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/man_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/man"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Dispatchers.IO" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_version_header"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/appVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Dispatchers.IO" />
+        </LinearLayout>
+
+        <!-- Add more property label and value pairs as needed -->
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/dialog_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+    </LinearLayout>
+</LinearLayout>
