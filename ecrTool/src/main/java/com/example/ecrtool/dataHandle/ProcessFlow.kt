@@ -11,7 +11,7 @@ import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
 import com.example.ecrtool.models.trafficToPos.toResultResponse
 import com.example.ecrtool.network.result.DataResult
 import com.example.ecrtool.network.useCase.MkUseCase
-import com.example.ecrtool.utils.*
+import com.example.ecrtool.utils.Constants
 import com.example.ecrtool.utils.Constants.Companion.DUPLICATE_REQUEST
 import com.example.ecrtool.utils.Constants.Companion.INTERNAL_ERROR
 import com.example.ecrtool.utils.Constants.Companion.INVALID_COMMAND
@@ -21,9 +21,13 @@ import com.example.ecrtool.utils.Constants.Companion.MAC_K
 import com.example.ecrtool.utils.Constants.Companion.MAC_NOT_SUPPORTED
 import com.example.ecrtool.utils.Constants.Companion.UNBIND_POS
 import com.example.ecrtool.utils.Constants.Companion.mappedErrors
+import com.example.ecrtool.utils.Logger
+import com.example.ecrtool.utils.Utils
 import com.example.ecrtool.utils.Utils.hexStringToByteArray
 import com.example.ecrtool.utils.Utils.toHexString
+import com.example.ecrtool.utils.euCurrencySymbols
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.ReceiveChannel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -69,13 +73,16 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
                             ecrId = amountRequest.ecrId,
                             decimals = amountRequest.decimals
                         )
+
                         messageHandler.sendMessage(
                             dt.createConfirmationResponse(
                                 confirmationResponse
                             )
                         )
 
-                        if(!euCurrencySymbols.contains(amountRequest.currencyCode)) {
+                        dbHandler.insertConfirmationResponse(confirmationResponse)
+
+                        if (!euCurrencySymbols.contains(amountRequest.currencyCode)) {
                             messageHandler.sendMessage(dt.createErrorResponseMessage(mappedErrors[INVALID_CURRENCY].toString()))
                             Logger.logToFile(INVALID_CURRENCY + " " + amountRequest.currencyCode)
                             return
@@ -103,7 +110,7 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
         }
 
         if (echoRequest != null) {
-            if(echoRequest.isInit) {
+            if (echoRequest.isInit) {
                 delay(5000)
                 callAade()
             }
@@ -184,53 +191,77 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
         }
     }
 
+    /**
+     * Handles the reception and processing of resend requests for all result responses.
+     *
+     * This method processes resend requests by iterating through all result responses and incomplete
+     * amount requests. It sends the result responses that match the session numbers of incomplete
+     * amount requests and waits for acknowledgment before proceeding to the next item.
+     *
+     * @param resendAllRequest The resend request triggering the processing.
+     */
     override suspend fun onResendAllRequestReceived(resendAllRequest: ResendAllRequest) {
         val ackResultRequestChannel = AppData.getAckResultRequestChannel()
+        val allResultsResponses = dbHandler.getAllResultResponses()
+
         while (true) {
             if (Utils.validateRequest(resendAllRequest)) {
-
-                val allResultsResponses = dbHandler.getAllResultResponses()
+                // Move this inside the loop to update it in each iteration
                 val incompleteAmountRequests =
                     dbHandler.getAllAmountRequests().filter { !it.completed }.toMutableList()
 
-                for (resultResponse in allResultsResponses) {
-                    incompleteAmountRequests.forEach { amountRequest ->
-                        run {
-                            allResultsResponses.forEach { result ->
-                                if (amountRequest.sessionNumber == result.sessionNumber) {
-                                    messageHandler.sendMessage(
-                                        dt.createResultResponse(
-                                            result,
-                                            false
-                                        )
-                                    )
-                                }
+                val matchedItems = mutableListOf<ResultResponse>()
 
-                                val ackResultRequest: AckResultRequest? = withTimeoutOrNull(500) {
-                                    ackResultRequestChannel.receive()
-                                }
-                                if (ackResultRequest != null) {
-                                    ackResultRequest.sessionNumber?.let {
-                                        markAmountRequestAsComplete(
-                                            it
-                                        )
-                                    }
-                                }
-                            }
+                for (resultResponse in allResultsResponses) {
+                    for (amountRequest in incompleteAmountRequests) {
+                        if (amountRequest.sessionNumber == resultResponse.sessionNumber) {
+                            matchedItems.add(resultResponse)
                         }
                     }
                 }
-            }
-            val incompleteAmountRequests =
-                dbHandler.getAllAmountRequests().filter { !it.completed }.toMutableList()
-            if (incompleteAmountRequests.isEmpty()) {
-                ackResultRequestChannel.close()
-                break
+
+                if (matchedItems.isNotEmpty()) {
+                    val resultResponse = matchedItems[0]
+                    messageHandler.sendMessage(
+                        dt.createResultResponse(
+                            resultResponse,
+                            false
+                        )
+                    )
+                    val ackResultRequest = awaitAckResultRequest(ackResultRequestChannel)
+                    ackResultRequest?.sessionNumber?.let {
+                        markAmountRequestAsComplete(it)
+                    }
+                    matchedItems.remove(resultResponse) // Remove the processed item
+
+                    // Update incompleteAmountRequests after processing an item
+                    incompleteAmountRequests.removeAll { it.sessionNumber == resultResponse.sessionNumber }
+                } else {
+                    // No more items to process, break the loop
+                    break
+                }
             }
         }
     }
 
-    suspend fun markAmountRequestAsComplete(sessionNumber: String) {
+
+
+    /**
+     * Awaits an acknowledgment result request from the provided channel.
+     *
+     * @param channel The channel to receive acknowledgment requests from.
+     * @return The received acknowledgment result request, or null if the channel is canceled.
+     */
+    private suspend fun awaitAckResultRequest(channel: ReceiveChannel<AckResultRequest>): AckResultRequest? {
+        return try {
+            channel.receive()
+        } catch (e: CancellationException) {
+            null // Handle cancellation if needed
+        }
+    }
+
+
+    private suspend fun markAmountRequestAsComplete(sessionNumber: String) {
         val amountRequest = dbHandler.getAmountRequestBySessionNumber(sessionNumber)
         if (amountRequest != null) {
             amountRequest.completed = true
@@ -251,9 +282,16 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
     }
 
     override suspend fun onAckResultRequestReceived(ackResultRequest: AckResultRequest) {
+
         val ackResultRequestChannel = AppData.getAckResultRequestChannel()
         ackResultRequestChannel.send(ackResultRequest)
 
+        val amountRequest = ackResultRequest.sessionNumber?.let {
+            dbHandler.getAmountRequestBySessionNumber(
+                it
+            )
+        }
+        amountRequest?.sessionNumber?.let { markAmountRequestAsComplete(it) }
     }
 
 
@@ -283,7 +321,10 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
 
         return if (AppData.getEcrSK().isNotEmpty()) {
             val decoded =
-                Utils.decodeSessionKey(mk.hexStringToByteArray(), AppData.getEcrSK().hexStringToByteArray())
+                Utils.decodeSessionKey(
+                    mk.hexStringToByteArray(),
+                    AppData.getEcrSK().hexStringToByteArray()
+                )
             if (decoded == null) {
                 messageHandler.sendMessage(dt.createErrorResponseMessage(mappedErrors[MAC_ERROR].toString()))
                 null
@@ -297,7 +338,7 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
         }
     }
 
-     suspend fun callAade() {
+    suspend fun callAade() {
         val scope = AppData.getMyEcrEftposInit()?.coroutineScope ?: CoroutineScope(Dispatchers.IO)
         val mkRequest = createMkRequest()
         scope.async {
@@ -309,7 +350,7 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
                         ProcessFlow::class.java.name,
                         "callAade: AADE CALL SUCCESS"
                     )
-                  }
+                }
                 is DataResult.Error -> {
                     Log.e(
                         ProcessFlow::class.java.name,

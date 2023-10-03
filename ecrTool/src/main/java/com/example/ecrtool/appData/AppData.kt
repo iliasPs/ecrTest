@@ -10,6 +10,7 @@ import com.example.ecrtool.models.trafficEcr.AckResultRequest
 import com.example.ecrtool.models.trafficEcr.ResultResponse
 import com.example.ecrtool.models.trafficToPos.MyEcrEftposInit
 import com.example.ecrtool.utils.FeatureStore
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 
 
@@ -27,7 +28,6 @@ object AppData {
     private var MAN: String = ""
     private var myEcrEftposInit: MyEcrEftposInit? = null
     private var ecrNumber: String = ""
-    private var resultRequestChannel = Channel<ResultResponse>()
     private var ackResultRequestChannel = Channel<AckResultRequest>()
     private var protocolVariant: String = ""
     private var protocolVersion: String = ""
@@ -48,16 +48,18 @@ object AppData {
         init.isCoreVersion.let { FeatureStore.setVersion(it) }
     }
 
-    fun getResultRequestChannel(): Channel<ResultResponse> {
-        return resultRequestChannel
-    }
-
     fun getValidateMk(): Boolean {
         return validateMk
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun getAckResultRequestChannel(): Channel<AckResultRequest> {
-        return ackResultRequestChannel
+        return if (ackResultRequestChannel.isClosedForReceive || ackResultRequestChannel.isClosedForSend) {
+            ackResultRequestChannel = Channel<AckResultRequest>()
+            ackResultRequestChannel
+        } else{
+            ackResultRequestChannel
+        }
     }
 
     fun setEcrNumber(number: String) {

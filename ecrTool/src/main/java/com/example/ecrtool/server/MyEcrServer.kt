@@ -10,7 +10,6 @@ import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
 import com.example.ecrtool.utils.Logger
 import kotlinx.coroutines.*
 import java.io.IOException
-import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 
@@ -20,7 +19,7 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
     private var paymentResultListener: PaymentResultListener = ProcessFlow.getInstance()
     private var messageHandler = MessageHandler.getInstance()
     private var init = myEcrEftposInit
-    private var serverSocket: ServerSocket? = null
+    private var serverSocket = ServerSocket(myEcrEftposInit.port)
     private val coroutineScope = myEcrEftposInit.coroutineScope ?: CoroutineScope(Dispatchers.IO)
     private var socket: Socket? = null
     private var isRunning = false
@@ -28,17 +27,11 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
 
     init {
         messageHandler.setListener(listener)
+        serverSocket.reuseAddress = true
     }
 
 
     fun start() {
-
-        if (serverSocket == null) {
-            serverSocket = ServerSocket(init.port)
-            serverSocket!!.reuseAddress = true
-            // No need to call bind() again, as it's already bound by the constructor.
-        }
-
         if (isRunning) {
             return
         }
@@ -54,10 +47,10 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
 
                     while (isRunning) {
                         socket = withContext(Dispatchers.IO) {
-                            if (serverSocket!!.isClosed) {
+                            if (serverSocket.isClosed) {
                                 serverSocket = ServerSocket(init.port)
                             }
-                            serverSocket!!.accept()
+                            serverSocket.accept()
                         }
                         handleConnection(socket)
                     }
@@ -120,11 +113,12 @@ class MyEcrServer(myEcrEftposInit: MyEcrEftposInit) {
     fun stop() {
         isRunning = false
         job?.cancelChildren()
-        serverSocket?.close()
+        serverSocket.close()
     }
 
     fun sendMessage(message: ByteArray) {
         Logger.logToFile(MessageHandler.getInstance().formatHexDump(message, 0, message.size))
+        Logger.logToFile("FROM POS: ${message.decodeToString()}")
 
         coroutineScope.launch(Dispatchers.IO) {
             val outputStream = socket?.getOutputStream()

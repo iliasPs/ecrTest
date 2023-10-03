@@ -55,7 +55,11 @@ class EcrToPosMain(
         }
 
         fun initialize(myEcrEftposInit: MyEcrEftposInit, context: Context) {
-            INSTANCE = EcrToPosMain(myEcrEftposInit, context)
+            if (INSTANCE != null) {
+                return
+            } else {
+                INSTANCE = EcrToPosMain(myEcrEftposInit, context)
+            }
         }
     }
 }

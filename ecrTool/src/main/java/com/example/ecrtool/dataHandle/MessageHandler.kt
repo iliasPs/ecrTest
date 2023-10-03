@@ -103,13 +103,11 @@ class MessageHandler private constructor() : MessageListener {
     }
 
     override fun onMessage(message: String) {
-        Logger.logToFile("FROM ECR: ${formatHexDump(message.encodeToByteArray(), 0, message.encodeToByteArray().size)}")
+        val bytes = message.encodeToByteArray()
+
+        Logger.logToFile("FROM ECR: ${formatHexDump(bytes, 0, bytes.size)}")
 
         Logger.logToFile("FROM ECR: $message")
-        val bytes = message.encodeToByteArray()
-        Log.d("MessageHandler", "------- FROM ECR -------" )
-
-        Log.d("MessageHandler", formatHexDump(bytes, 0, bytes.size))
 
         val cleanMessage = Utils.extractMessage(message)
 
@@ -158,9 +156,6 @@ class MessageHandler private constructor() : MessageListener {
     override fun sendMessage(message: String) {
         val finalMessage = Utils.generateMessage(message)
         Log.d("TAG", "sendMessage: ${finalMessage.decodeToString()}")
-        //val bytes = finalMessage.encodeToByteArray()
-        Log.d("MessageHandler", "------- FROM POS -------" )
-       // Log.d("MessageHandler", formatHexDump(bytes, 0, bytes.size))
 
         server.sendMessage(finalMessage)
     }

@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -73,6 +74,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         val recyclerView: RecyclerView = binding.itemsRv
         val layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
+
 
         recyclerView.adapter = adapter
 
@@ -182,7 +184,15 @@ class MainActivity : AppCompatActivity(), AppMessenger {
 //            MyEcrServerSingleton.getInstance().onMessageReceived(".DECR0210U/RABC00111222/CMAC_K:1ED9F7AE0B2509281BBC2DE38EF2A12B:CC5FFF")
         }
 
-        binding.includedLayout.button2.setOnClickListener { lifecycleScope.launch { ecrServer.startServer() } }
+        binding.includedLayout.button2.setOnClickListener {
+            lifecycleScope.launch {
+                if (AppData.getMyEcrEftposInit() != null) {
+                    ecrServer.startServer()
+                } else {
+                    Toast.makeText(applicationContext, "Input data first!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
         binding.includedLayout.button3.setOnClickListener {
             lifecycleScope.launch {
                 lifecycleScope.launch {
@@ -210,11 +220,14 @@ class MainActivity : AppCompatActivity(), AppMessenger {
                                 messageType = MessageType.INCOMING
                             )
                         )
+                        binding.itemsRv.smoothScrollToPosition(adapter.getItems().size - 1);
+
                     } else {
                         adapter.addItem(Message(content = data, messageType = MessageType.OUTGOING))
-
+                        binding.itemsRv.smoothScrollToPosition(adapter.getItems().size - 1);
                     }
                 }
+
             }
             is AmountRequest -> {
                 ecrServer.sendMessageToEcr(
