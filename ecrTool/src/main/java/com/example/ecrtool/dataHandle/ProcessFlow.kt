@@ -185,7 +185,11 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
             if (resultToSend != null) {
                 messageHandler.sendMessage(dt.createResultResponse(resultToSend, true))
             } else {
-                messageHandler.sendMessage(dt.createErrorResponseMessage(INTERNAL_ERROR))
+                messageHandler.sendMessage(
+                    dt.createErrorResponseMessage(
+                        mappedErrors[INTERNAL_ERROR].toString()
+                    )
+                )
             }
 
         }
@@ -243,7 +247,6 @@ class ProcessFlow : ProcessFlowsListener, PaymentResultListener, KoinComponent {
             }
         }
     }
-
 
 
     /**

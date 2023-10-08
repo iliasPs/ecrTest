@@ -179,9 +179,44 @@ object Utils {
         }
         return buf
     }
+// ------------------------------
+    fun calculateKCV(key: ByteArray): String {
+        try {
+            val adjustedKey = adjustKeyToDESede(key)
+            val keySpec = SecretKeySpec(adjustedKey, "DESede")
+            val cipher: Cipher = Cipher.getInstance("DESede/ECB/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec)
+            val result = cipher.doFinal(ByteArray(8)) // Encrypt 8 bytes of zero
+            return bytesToHex(result).substring(0, 6).uppercase(Locale.ROOT)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return ""
+    }
+
+    fun adjustKeyToDESede(key: ByteArray): ByteArray {
+        // Adjust the key length to 24 bytes by adding parity bits
+        val adjustedKey = ByteArray(24)
+        for (i in 0 until 24) {
+            adjustedKey[i] = key[i % key.size]
+        }
+        return adjustedKey
+    }
+
+    fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
+    }
+
+// ------------------------------------
     fun calculateMac(message: String, masterKeyHex: String): String {
         // Initialize the Bouncy Castle provider
-        Security.addProvider(BouncyCastleProvider())
+        Security.addProvider(BouncyCastleProvider()) //7fddef16b7b036b2bf77991726bbe1d7
 
         // Convert the master key hex string to bytes
         val masterKeyBytes = masterKeyHex.hexStringToByteArray()

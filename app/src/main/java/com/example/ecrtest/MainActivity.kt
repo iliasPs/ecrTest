@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -26,13 +25,8 @@ import com.example.ecrtool.dataHandle.DataTransformer
 import com.example.ecrtool.dataHandle.ProcessFlow
 import com.example.ecrtool.listeners.AppMessenger
 import com.example.ecrtool.models.trafficEcr.AmountRequest
-import com.example.ecrtool.models.trafficEcr.ConfirmationResponse
-import com.example.ecrtool.models.trafficEcr.EchoResponse
-import com.example.ecrtool.models.trafficEcr.ResultResponse
 import com.example.ecrtool.models.trafficToPos.MyEcrEftposInit
 import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
-import com.example.ecrtool.server.MyEcrServerSingleton
-import com.example.ecrtool.utils.Constants
 import com.example.ecrtool.utils.Utils
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.conn.util.InetAddressUtils
 import kotlinx.coroutines.launch
@@ -55,17 +49,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        val ftpos = MyEcrEftposInit(
-//            port = 5566,
-//            appListener = this,
-//            isCoreVersion = true,
-//            TID = "80011693",
-//            vatNumber = "979703476",
-//            apiKey = "pubAGQR@XNzSk%b&+X!A?h?HJUVVhPHlyv/acPq0uKHQ#dEc3B85en%AXHiX2i8&",
-//            MAN = "fintechiq_dok",
-//            appVersion = "1.0.0",
-//            validateMk = true
-//        )
+
 
         binding.includedLayout.ipTv.text = "My IP: ${getWifiIPAddress()}"
 
@@ -81,119 +65,7 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         val itemDecorator = ItemDecorator(resources.getDimensionPixelSize(R.dimen.item_spacing))
         recyclerView.addItemDecoration(itemDecorator)
 
-//        EcrToPosMain.initialize(ftpos, this)
-//        ecrServer = EcrToPosMain.getInstance()
-
         binding.includedLayout.buttonFirst.setOnClickListener {
-
-            myEcrEftposInit = MyEcrEftposInit(
-                port = 5566,
-                appListener = this,
-                isCoreVersion = true,
-                TID = "80011693",
-                vatNumber = "979703476",
-                apiKey = "pubAGQR@XNzSk%b&+X!A?h?HJUVVhPHlyv/acPq0uKHQ#dEc3B85en%AXHiX2i8&",
-                MAN = "fintechiq_dok",
-                appVersion = "1.0.0",
-                validateMk = true
-            )
-            EcrToPosMain.initialize(myEcrEftposInit!!, this)
-            ecrServer = EcrToPosMain.getInstance()
-            val echoRequest =
-                dt.parseEchoRequest(Utils.extractMessage("??�ECR0110X/CFB77000028"))
-            Log.d("TAG", "onCreate: EchoRequest :$echoRequest")
-
-            val response = Utils.generateMessage(
-                dt.createEchoResponseMessage(
-                    EchoResponse(
-                        text = echoRequest?.text,
-                        terminalId = AppData.getTerminalId(),
-                        appVersion = AppData.getAppVersion()
-                    )
-                )
-            )
-            Log.d("TAG", "onCreate  EchoResponse : $response")
-
-
-            val amountRequest = dt.parseAmountRequest(
-                Utils.extractMessage(".QECR0210A/S001008/F2500:978:2/D20220524102517/RABC00111222/H121/T1020/M0/Q59D19E7D"),
-                Constants.TYPE_AMOUNT_SALE_REQUEST
-            )
-
-            Log.d("TAG", "onCreate  amountRequest : $amountRequest")
-
-
-            val confirmResponse = Utils.generateMessage(
-                dt.createConfirmationResponse(
-                    ConfirmationResponse(
-                        receiptNumber = amountRequest.receiptNumber,
-                        sessionNumber = amountRequest.sessionNumber,
-                        amount = amountRequest.amount,
-                        ecrId = amountRequest.ecrId,
-                        decimals = amountRequest.decimals
-                    )
-                )
-            )
-
-            Log.d("TAG", "onCreate  confirmResponse : $confirmResponse")
-
-
-            val resultResponse = dt.createResultResponse(
-                ResultResponse(
-                    receiptNumber = amountRequest.receiptNumber,
-                    sessionNumber = amountRequest.sessionNumber,
-                    amount = amountRequest.amount,
-                    ecrId = amountRequest.ecrId,
-                    _rspCode = "00"
-                ), false
-            )
-
-            Log.d("TAG", "onCreate  resultResponse : $resultResponse")
-//
-//            val ackResultRequest =
-//                dt.parseAckResultRequest(Utils.extractMessage(".QECR0110R/S001008/RABC00111222/F2500/T1020"))
-//            Log.d("TAG", "onCreate: ackResultRequest :$ackResultRequest")
-//
-//            val regReceiptRequest =
-//                dt.parseRegReceiptRequest(Utils.extractMessage(".QECR0110W/S001573/F5000:978:2/D20220711105009/RABC00111222/H121/T1228/M0/Q30ADD8A3"))
-//            Log.d("TAG", "onCreate: regReceiptRequest :$regReceiptRequest")
-//
-//            val resendRequest =
-//                dt.parseResendRequest(Utils.extractMessage(".8ECR0110O/S001058/F150:978:2/RABC00111222/T1051/QF7167A9F"))
-//            Log.d("TAG", "onCreate: resendRequest :$resendRequest")
-//
-//            val resendAllRequest =
-//                dt.parseResendAllRequest(Utils.extractMessage("./ECR0110L/RABC00111222/D20220711110645/Q6C483FCE"))
-//            Log.d("TAG", "onCreate: resendAllRequest :$resendAllRequest")
-//
-//            val controlRequest =
-//                dt.parseControlRequest(Utils.extractMessage(".#ECR0210U/RABC00111222/CUNBIND_POS:1"))
-//            Log.d("TAG", "onCreate: controlRequest :$controlRequest")
-//
-//            val controlRequestMK =
-//                dt.parseControlRequest(Utils.extractMessage(".DECR0210U/RABC00111222/CMAC_K:1ED9F7AE0B2509281BBC2DE38EF2A12B:CC5FFF"))
-//            Log.d("TAG", "onCreate: controlRequestMK :$controlRequestMK")
-//
-//
-//            MyEcrServerSingleton.getInstance()
-//                .onMessageReceived(".QECR0210A/S001008/F2500:978:2/D20220524102517/RABC00111222/H121/T1020/M0/Q59D19E7D")
-
-            //MyEcrServerSingleton.getInstance().onMessageReceived(".QECR0110X/INIT:CFB77000028")
-
-            MyEcrServerSingleton.getInstance().onMessageReceived("??�ECR0110X/CFB77000028:1234")
-//            MyEcrServerSingleton.getInstance().onMessageReceived(".DECR0210U/RABC00111222/CMAC_K:1ED9F7AE0B2509281BBC2DE38EF2A12B:CC5FFF")
-        }
-
-        binding.includedLayout.button2.setOnClickListener {
-            lifecycleScope.launch {
-                if (AppData.getMyEcrEftposInit() != null) {
-                    ecrServer.startServer()
-                } else {
-                    Toast.makeText(applicationContext, "Input data first!", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-        binding.includedLayout.button3.setOnClickListener {
             lifecycleScope.launch {
                 lifecycleScope.launch {
                     this.launch {
@@ -202,9 +74,35 @@ class MainActivity : AppCompatActivity(), AppMessenger {
                 }
             }
         }
+
+        binding.includedLayout.button2.setOnClickListener {
+            lifecycleScope.launch {
+                if (AppData.getMyEcrEftposInit() != null) {
+                    ecrServer.startServer()
+                    adapter.addItem(
+                        Message(
+                            content = "Starting Server...",
+                            messageType = MessageType.OUTGOING
+                        )
+                    )
+                } else {
+                    Toast.makeText(applicationContext, "Input data first!", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+        binding.includedLayout.button3.setOnClickListener {
+            ecrServer.stopServer()
+            adapter.addItem(
+                Message(
+                    content = "Stopping server...",
+                    messageType = MessageType.OUTGOING
+                )
+            )
+        }
+
         binding.includedLayout.button4.setOnClickListener {
             openFragment()
-
         }
     }
 
@@ -230,35 +128,37 @@ class MainActivity : AppCompatActivity(), AppMessenger {
 
             }
             is AmountRequest -> {
-                ecrServer.sendMessageToEcr(
-                    PaymentToPosResult(
-                        success = true,
-                        code = "00",
-                        cardType = "Mastercard",
-                        txnType = "00",
-                        cardPanMasked = Utils.createMaskedPan("000012300412341234"),
-                        amountFinal = data.amount,
-                        amountTip = 0.0,
-                        amountLoyalty = 0.0,
-                        amountCashBack = 0.0,
-                        bankId = "1",
-                        batchNum = "2",
-                        rrn = "133030119089",
-                        stan = Utils.generateRandomStan(),
-                        authCode = Utils.generateRandomAuthCode(),
-                        transDateTime = Utils.generateTransactionDateTime(),
-                        receiptNumber = data.receiptNumber,
-                        sessionNumber = data.sessionNumber,
-                        amount = data.amount,
-                        ecrId = data.ecrId,
-                        rspCode = "00",
-                        transactionEcrStatus = "0",
-                        prnData = "adsf",
-                        terminalId = "80011693",
-                        decimalPoints = data.decimals,
-                        customData = data.customData
+                runOnUiThread {
+                    showSaleDialog(
+                        PaymentToPosResult(
+                            success = true,
+                            code = "00",
+                            cardType = "Mastercard",
+                            txnType = "00",
+                            cardPanMasked = Utils.createMaskedPan("000012300412341234"),
+                            amountFinal = data.amount,
+                            amountTip = 0.0,
+                            amountLoyalty = 0.0,
+                            amountCashBack = 0.0,
+                            bankId = "1",
+                            batchNum = "2",
+                            rrn = "133030119089",
+                            stan = Utils.generateRandomStan(),
+                            authCode = Utils.generateRandomAuthCode(),
+                            transDateTime = Utils.generateTransactionDateTime(),
+                            receiptNumber = data.receiptNumber,
+                            sessionNumber = data.sessionNumber,
+                            amount = data.amount,
+                            ecrId = data.ecrId,
+                            rspCode = "00",
+                            transactionEcrStatus = "0",
+                            prnData = "adsf",
+                            terminalId = "80011693",
+                            decimalPoints = data.decimals,
+                            customData = data.customData
+                        )
                     )
-                )
+                }
             }
         }
 
@@ -360,6 +260,26 @@ class MainActivity : AppCompatActivity(), AppMessenger {
         // Add an "OK" button to dismiss the dialog
         builder.setPositiveButton("OK") { dialog, _ ->
             dialog.dismiss()
+        }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+
+    private fun showSaleDialog(paymentToPosResult: PaymentToPosResult) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Sale Request")
+        builder.setMessage("Incoming Sale request of ${paymentToPosResult.amount} Euro")
+
+        // Set up the "OK" button
+        builder.setPositiveButton("OK") { dialog, which ->
+            ecrServer.sendMessageToEcr(paymentToPosResult)
+        }
+
+        // Set up the "Cancel" button
+        builder.setNegativeButton("Cancel") { dialog, which ->
+            ecrServer.sendMessageToEcr(paymentToPosResult.copy(rspCode = "04"))
         }
 
         val dialog = builder.create()

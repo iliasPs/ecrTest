@@ -1,11 +1,8 @@
 package com.example.ecrtool.dataHandle
 
 import android.util.Log
-import com.example.ecrtool.appData.AppData
 import com.example.ecrtool.listeners.MessageListener
-import com.example.ecrtool.listeners.PaymentResultListener
 import com.example.ecrtool.listeners.ProcessFlowsListener
-import com.example.ecrtool.models.trafficToPos.PaymentToPosResult
 import com.example.ecrtool.server.MyEcrServer
 import com.example.ecrtool.server.MyEcrServerSingleton
 import com.example.ecrtool.utils.Constants
@@ -26,7 +23,6 @@ import com.example.ecrtool.utils.Logger
 import com.example.ecrtool.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.UnsupportedEncodingException
 

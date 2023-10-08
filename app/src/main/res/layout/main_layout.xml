@@ -21,14 +21,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="My ip:" />
+            android:text="@string/my_ip_header" />
 
         <TextView
             android:id="@+id/port_tv"
             style="@style/TextviewStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Port:" />
+            android:text="@string/port_header_main" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -42,20 +42,13 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <Button
-            android:id="@+id/button_first"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_margin="4dp"
-            android:layout_weight="1"
-            android:text="butt1" />
-
-        <Button
             android:id="@+id/button_2"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:text="start server" />
+            android:text="@string/start_server"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/button_3"
@@ -63,7 +56,18 @@
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:text="stop server" />
+            android:text="@string/stop_server"
+            android:textAllCaps="false" />
+
+
+        <Button
+            android:id="@+id/button_first"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="4dp"
+            android:layout_weight="1"
+            android:text="@string/e_send_call"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/button_4"
@@ -71,7 +75,8 @@
             android:layout_height="match_parent"
             android:layout_margin="4dp"
             android:layout_weight="1"
-            android:text="@string/new_data" />
+            android:text="@string/new_data"
+            android:textAllCaps="false" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
