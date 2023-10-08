@@ -10,6 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="16sp"
+        android:textColor="@color/black"
         android:text="INCOMING MESSAGE"
         android:padding="8dp"/>
     <TextView
@@ -17,6 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="16sp"
+        android:textColor="@color/black"
         android:text="asdfsdfsadsdfasdfasdf
 asdfasdfasdfsadfas\nasdfasdfasdf"
         android:padding="8dp"/>
